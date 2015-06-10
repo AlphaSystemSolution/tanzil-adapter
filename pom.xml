@@ -15,20 +15,55 @@
             <artifactId>commons</artifactId>
             <version>${commons.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>org.eclipse.persistence.moxy</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.uncommons</groupId>
+            <artifactId>reportng</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
-            <plugin>
+            <!--plugin>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-xjc-plugin</artifactId>
-            </plugin>
+                <configuration>
+                    <xsdOptions>
+                        <xsdOption>
+                            <xsd>${basedir}/src/main/resources/tanzil.xsd</xsd>
+                            <bindingFile>${basedir}/src/main/resources/tanzil.xjb</bindingFile>
+                            <extensionArgs>
+                                <extensionArg>-Xfluent-api</extensionArg>
+                                <extensionArg>-Xcollection-setter-injector</extensionArg>
+                            </extensionArgs>
+                        </xsdOption>
+                    </xsdOptions>
+                </configuration>
+            </plugin-->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
     <properties>
         <commons.version>${project.version}</commons.version>
+        <genOutputDirectory>${project.build.directory}/generated/src/main/java</genOutputDirectory>
+        <maven.test.skip>false</maven.test.skip>
     </properties>
 </project>
