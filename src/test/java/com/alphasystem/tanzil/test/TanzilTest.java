@@ -29,6 +29,6 @@ public class TanzilTest {
         Integer chapterNumber = 1;
         Integer verseNumber = 2;
         Verse verse = tanzilTool.getVerse(chapterNumber, verseNumber);
-        log(format("Verse Number: %s", verse.getVerseNumber()), true);
+        log(format("Chapter Number: %s, Verse Number: %s", verse.getChapterNumber(), verse.getVerseNumber()), true);
     }
 }

@@ -37,12 +37,30 @@ import javax.xml.bind.annotation.*;
 @XmlType(name = "VerseType")
 public class Verse {
 
+    @XmlTransient
+    protected Integer chapterNumber;
     @XmlAttribute(name = "index", required = true)
     protected Integer verseNumber;
     @XmlAttribute(required = true)
     protected String text;
     @XmlAttribute
     protected String bismillah;
+
+    /**
+     *
+     * @return
+     */
+    public Integer getChapterNumber() {
+        return chapterNumber;
+    }
+
+    /**
+     *
+     * @param chapterNumber
+     */
+    public void setChapterNumber(Integer chapterNumber) {
+        this.chapterNumber = chapterNumber;
+    }
 
     /**
      * Gets the value of the verseNumber property.

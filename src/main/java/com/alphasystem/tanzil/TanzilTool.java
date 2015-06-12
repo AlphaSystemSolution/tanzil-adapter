@@ -7,6 +7,7 @@ import com.alphasystem.util.JAXBTool;
 import org.apache.commons.jxpath.JXPathContext;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
 
 import static com.alphasystem.tanzil.QuranScript.QURAN_SIMPLE;
@@ -52,6 +53,25 @@ public final class TanzilTool {
      * Do not let any one instantiate this class
      */
     private TanzilTool() {
+        jaxbTool.withUnMarshallerListener(new Unmarshaller.Listener() {
+
+            @Override
+            public void afterUnmarshal(Object target, Object parent) {
+                super.afterUnmarshal(target, parent);
+                Chapter chapter = null;
+                if (parent != null && Chapter.class.isAssignableFrom(parent.getClass())) {
+                    chapter = (Chapter) parent;
+                }
+                Verse verse = null;
+                if (target != null && Verse.class.isAssignableFrom(target.getClass())) {
+                    verse = (Verse) target;
+                }
+                if (chapter != null && verse != null) {
+                    verse.setChapterNumber(chapter.getChapterNumber());
+                }
+            }
+
+        });
         readDocument();
     }
 
@@ -67,7 +87,6 @@ public final class TanzilTool {
     }
 
     /**
-     *
      * @param chapterNumber
      * @return
      */
@@ -77,12 +96,11 @@ public final class TanzilTool {
     }
 
     /**
-     *
      * @param chapterNumber
      * @param verseNumber
      * @return
      */
-    public Verse getVerse(int chapterNumber, int verseNumber){
+    public Verse getVerse(int chapterNumber, int verseNumber) {
         jxPathContext.getVariables().declareVariable(CHAPTER_NUMBER_VARIABLE_NAME, chapterNumber);
         jxPathContext.getVariables().declareVariable(VERSE_NUMBER_VARIABLE_NAME, verseNumber);
         return (Verse) jxPathContext.getValue(VERSE_XPATH);
