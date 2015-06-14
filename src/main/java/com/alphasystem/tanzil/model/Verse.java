@@ -8,7 +8,15 @@
 
 package com.alphasystem.tanzil.model;
 
+import com.alphasystem.arabic.model.ArabicWord;
+
 import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.alphasystem.arabic.model.ArabicWord.concatenateWithSpace;
+import static com.alphasystem.arabic.model.ArabicWord.fromUnicode;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 
 /**
@@ -45,6 +53,10 @@ public class Verse {
     protected String text;
     @XmlAttribute
     protected String bismillah;
+    @XmlTransient
+    protected ArabicWord verse;
+    @XmlTransient
+    protected List<ArabicWord> tokens;
 
     /**
      *
@@ -132,6 +144,53 @@ public class Verse {
      */
     public void setBismillah(String value) {
         this.bismillah = value;
+    }
+
+    public ArabicWord getVerse() {
+        return verse;
+    }
+
+    public void setVerse(ArabicWord verse) {
+        this.verse = verse;
+    }
+
+    public List<ArabicWord> getTokens() {
+        if (tokens == null) {
+            loadTokens();
+        }
+        return tokens;
+    }
+
+    private void loadTokens() {
+        tokens = new ArrayList<>();
+        String[] _tokens = text.split(" ");
+        for (int i = 0; i < _tokens.length; i++) {
+            String token = _tokens[i];
+            if (isBlank(token)) {
+                continue;
+            }
+            token = token.trim();
+            ArabicWord word = fromUnicode(token);
+            if (token.length() == 1) {
+                // one of punctuation character
+                // logic is to merge punctuation with the previous token,
+                // but if it is the first token then merge it with next token
+                if (i == 0) {
+                    String nextToken = _tokens[++i].trim();
+                    if (nextToken.length() == 1) {
+                        System.out.println(String.format("Two punctuation together??? For CN: %s, VN: %s",
+                                getChapterNumber(), getVerseNumber()));
+                    }
+                    tokens.add(concatenateWithSpace(word, fromUnicode(nextToken)));
+                } else {
+                    int lastIndex = tokens.size() - 1;
+                    ArabicWord lastWord = tokens.get(lastIndex);
+                    tokens.set(lastIndex, concatenateWithSpace(lastWord, word));
+                }
+            } else {
+                tokens.add(word);
+            }
+        }
     }
 
     public Verse withVerseNumber(Integer value) {

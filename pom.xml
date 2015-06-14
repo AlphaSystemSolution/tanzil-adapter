@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -10,6 +10,11 @@
     <groupId>com.alphasystem</groupId>
     <artifactId>tanzil-adapter</artifactId>
     <dependencies>
+        <dependency>
+            <groupId>com.alphasystem.arabic</groupId>
+            <artifactId>arabic-support</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>com.alphasystem</groupId>
             <artifactId>commons</artifactId>
@@ -63,6 +68,7 @@
     </build>
     <properties>
         <commons.version>${project.version}</commons.version>
+        <arabic-support.version>${project.version}</arabic-support.version>
         <genOutputDirectory>${project.build.directory}/generated/src/main/java</genOutputDirectory>
         <maven.test.skip>false</maven.test.skip>
     </properties>

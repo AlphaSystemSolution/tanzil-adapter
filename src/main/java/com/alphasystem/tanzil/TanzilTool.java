@@ -10,6 +10,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
 
+import static com.alphasystem.arabic.model.ArabicWord.fromUnicode;
 import static com.alphasystem.tanzil.QuranScript.QURAN_SIMPLE;
 import static com.alphasystem.util.AppUtil.getUrl;
 import static java.lang.String.format;
@@ -38,17 +39,9 @@ public final class TanzilTool {
         }
     }
 
-    public static synchronized TanzilTool getInstance() {
-        if (instance == null) {
-            instance = new TanzilTool();
-        }
-        return instance;
-    }
-
     private JAXBTool jaxbTool = new JAXBTool();
     private JXPathContext jxPathContext;
     private Document document;
-
     /*
      * Do not let any one instantiate this class
      */
@@ -68,11 +61,20 @@ public final class TanzilTool {
                 }
                 if (chapter != null && verse != null) {
                     verse.setChapterNumber(chapter.getChapterNumber());
+                    String text = verse.getText();
+                    verse.setVerse(fromUnicode(text));
                 }
             }
 
         });
         readDocument();
+    }
+
+    public static synchronized TanzilTool getInstance() {
+        if (instance == null) {
+            instance = new TanzilTool();
+        }
+        return instance;
     }
 
     private void readDocument() {
