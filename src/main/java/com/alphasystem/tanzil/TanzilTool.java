@@ -1,6 +1,7 @@
 package com.alphasystem.tanzil;
 
 import com.alphasystem.tanzil.model.Chapter;
+import com.alphasystem.tanzil.model.ContextHolder;
 import com.alphasystem.tanzil.model.Document;
 import com.alphasystem.tanzil.model.Verse;
 import com.alphasystem.util.JAXBTool;
@@ -9,12 +10,13 @@ import org.apache.commons.jxpath.JXPathContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.alphasystem.arabic.model.ArabicWord.fromUnicode;
 import static com.alphasystem.tanzil.QuranScript.QURAN_SIMPLE;
 import static com.alphasystem.util.AppUtil.getUrl;
 import static java.lang.String.format;
-import static java.lang.System.getProperty;
 
 /**
  * @author sali
@@ -29,19 +31,10 @@ public final class TanzilTool {
     private static final QuranScript DEFAULT_SCRIPT = QURAN_SIMPLE;
     public static QuranScript script;
     private static TanzilTool instance;
-
-    static {
-        String quranic_script = getProperty(QURANIC_SCRIPT, DEFAULT_SCRIPT.name());
-        try {
-            script = QuranScript.valueOf(quranic_script);
-        } catch (IllegalArgumentException e) {
-            script = DEFAULT_SCRIPT;
-        }
-    }
+    private static Map<QuranScript, ContextHolder> documentMap = new HashMap<>();
 
     private JAXBTool jaxbTool = new JAXBTool();
-    private JXPathContext jxPathContext;
-    private Document document;
+
     /*
      * Do not let any one instantiate this class
      */
@@ -67,7 +60,6 @@ public final class TanzilTool {
             }
 
         });
-        readDocument();
     }
 
     public static synchronized TanzilTool getInstance() {
@@ -77,21 +69,31 @@ public final class TanzilTool {
         return instance;
     }
 
-    private void readDocument() {
-        String resourcePath = format("tanzil.%s.xml", script.getScript());
-        try {
-            document = jaxbTool.unmarshal(Document.class, getUrl(resourcePath));
-            jxPathContext = JXPathContext.newContext(document);
-        } catch (IOException | JAXBException e) {
-            e.printStackTrace();
+    private ContextHolder getContext(QuranScript script) {
+        ContextHolder contextHolder = documentMap.get(script);
+        if (contextHolder == null) {
+            try {
+                Document document = jaxbTool.unmarshal(Document.class, getUrl(script.getPath()));
+                JXPathContext jxPathContext = JXPathContext.newContext(document);
+                contextHolder = new ContextHolder(document, jxPathContext);
+                documentMap.put(script, contextHolder);
+            } catch (IOException | JAXBException e) {
+                e.printStackTrace();
+            }
         }
+        if (contextHolder == null) {
+            throw new NullPointerException(format("No document found for script {%s}", script.getPath()));
+        }
+        return contextHolder;
     }
 
     /**
      * @param chapterNumber
+     * @param script
      * @return
      */
-    public Chapter getChapter(int chapterNumber) {
+    public Chapter getChapter(int chapterNumber, QuranScript script) {
+        JXPathContext jxPathContext = getContext(script).getJxPathContext();
         jxPathContext.getVariables().declareVariable(CHAPTER_NUMBER_VARIABLE_NAME, chapterNumber);
         return (Chapter) jxPathContext.getValue(CHAPTER_XPATH);
     }
@@ -101,7 +103,8 @@ public final class TanzilTool {
      * @param verseNumber
      * @return
      */
-    public Verse getVerse(int chapterNumber, int verseNumber) {
+    public Verse getVerse(int chapterNumber, int verseNumber, QuranScript script) {
+        JXPathContext jxPathContext = getContext(script).getJxPathContext();
         jxPathContext.getVariables().declareVariable(CHAPTER_NUMBER_VARIABLE_NAME, chapterNumber);
         jxPathContext.getVariables().declareVariable(VERSE_NUMBER_VARIABLE_NAME, verseNumber);
         return (Verse) jxPathContext.getValue(VERSE_XPATH);

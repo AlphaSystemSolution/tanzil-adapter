@@ -2,7 +2,7 @@ package com.alphasystem.tanzil;
 
 import com.alphasystem.tanzil.model.Chapter;
 import com.alphasystem.tanzil.model.Document;
-import com.alphasystem.tanzil.model.TranslationDocument;
+import com.alphasystem.tanzil.model.ContextHolder;
 import com.alphasystem.tanzil.model.Verse;
 import com.alphasystem.util.JAXBTool;
 import org.apache.commons.jxpath.JXPathContext;
@@ -23,11 +23,14 @@ public class TranslationTool {
 
     private static final String CHAPTER_NUMBER_VARIABLE_NAME = "chapterNumber";
     private static final String VERSE_NUMBER_VARIABLE_NAME = "verseNumber";
+    private static final String FIRST_VERSE_NUMBER_VARIABLE_NAME = "verseNumber1";
+    private static final String LAST_VERSE_NUMBER_VARIABLE_NAME = "verseNumber2";
     private static final String CHAPTER_XPATH = "sura[@chapterNumber = $chapterNumber]";
     private static final String VERSE_XPATH = "sura[@chapterNumber = $chapterNumber]/verses[@verseNumber = $verseNumber]";
+    private static final String VERSE_BETWEEN_XPATH = "sura[@chapterNumber = $chapterNumber]/verses[@verseNumber >= $verseNumber1 and @verseNumber <= $verseNumber2]";
 
     private static TranslationTool instance = new TranslationTool();
-    private static Map<TranslationScript, TranslationDocument> documentMap = new HashMap<>();
+    private static Map<TranslationScript, ContextHolder> documentMap = new HashMap<>();
     private JAXBTool jaxbTool = new JAXBTool();
 
     private TranslationTool() {
@@ -56,22 +59,22 @@ public class TranslationTool {
         return instance;
     }
 
-    private TranslationDocument getDocument(TranslationScript script) {
-        TranslationDocument translationDocument = documentMap.get(script);
-        if (translationDocument == null) {
+    private ContextHolder getContext(TranslationScript script) {
+        ContextHolder contextHolder = documentMap.get(script);
+        if (contextHolder == null) {
             try {
                 Document document = jaxbTool.unmarshal(Document.class, getUrl(script.getPath()));
                 JXPathContext jxPathContext = JXPathContext.newContext(document);
-                translationDocument = new TranslationDocument(document, jxPathContext);
-                documentMap.put(script, translationDocument);
+                contextHolder = new ContextHolder(document, jxPathContext);
+                documentMap.put(script, contextHolder);
             } catch (IOException | JAXBException e) {
                 e.printStackTrace();
             }
         }
-        if (translationDocument == null) {
+        if (contextHolder == null) {
             throw new NullPointerException(format("No document found for script {%s}", script.getPath()));
         }
-        return translationDocument;
+        return contextHolder;
     }
 
     /**
@@ -83,8 +86,8 @@ public class TranslationTool {
      * @throws NullPointerException if script is null or there is no such document
      */
     public Chapter getChapter(int chapterNumber, TranslationScript script) throws NullPointerException {
-        TranslationDocument translationDocument = getDocument(script);
-        JXPathContext jxPathContext = translationDocument.getJxPathContext();
+        ContextHolder contextHolder = getContext(script);
+        JXPathContext jxPathContext = contextHolder.getJxPathContext();
         jxPathContext.getVariables().declareVariable(CHAPTER_NUMBER_VARIABLE_NAME, chapterNumber);
         return (Chapter) jxPathContext.getValue(CHAPTER_XPATH);
     }
@@ -97,10 +100,19 @@ public class TranslationTool {
      * @throws NullPointerException if script is null or there is no such document
      */
     public Verse getVerse(int chapterNumber, int verseNumber, TranslationScript script) throws NullPointerException {
-        TranslationDocument translationDocument = getDocument(script);
-        JXPathContext jxPathContext = translationDocument.getJxPathContext();
+        ContextHolder contextHolder = getContext(script);
+        JXPathContext jxPathContext = contextHolder.getJxPathContext();
         jxPathContext.getVariables().declareVariable(CHAPTER_NUMBER_VARIABLE_NAME, chapterNumber);
         jxPathContext.getVariables().declareVariable(VERSE_NUMBER_VARIABLE_NAME, verseNumber);
         return (Verse) jxPathContext.getValue(VERSE_XPATH);
+    }
+
+    public Verse getVerse(int chapterNumber, int firstVerseNumber, int lastVerseNumber, TranslationScript script) throws NullPointerException {
+        ContextHolder contextHolder = getContext(script);
+        JXPathContext jxPathContext = contextHolder.getJxPathContext();
+        jxPathContext.getVariables().declareVariable(CHAPTER_NUMBER_VARIABLE_NAME, chapterNumber);
+        jxPathContext.getVariables().declareVariable(FIRST_VERSE_NUMBER_VARIABLE_NAME, firstVerseNumber);
+        jxPathContext.getVariables().declareVariable(LAST_VERSE_NUMBER_VARIABLE_NAME, lastVerseNumber);
+        return (Verse) jxPathContext.getValue(VERSE_BETWEEN_XPATH);
     }
 }

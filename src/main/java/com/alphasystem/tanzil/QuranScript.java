@@ -1,5 +1,7 @@
 package com.alphasystem.tanzil;
 
+import static java.lang.String.format;
+
 /**
  * @author sali
  */
@@ -26,5 +28,9 @@ public enum QuranScript {
 
     public String getScript() {
         return script;
+    }
+
+    public String getPath(){
+        return format("tanzil.%s.xml", getScript());
     }
 }
