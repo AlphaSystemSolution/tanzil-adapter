@@ -82,7 +82,6 @@ public final class TanzilTool {
         try {
             document = jaxbTool.unmarshal(Document.class, getUrl(resourcePath));
             jxPathContext = JXPathContext.newContext(document);
-
         } catch (IOException | JAXBException e) {
             e.printStackTrace();
         }

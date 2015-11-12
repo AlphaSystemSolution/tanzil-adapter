@@ -2,12 +2,15 @@ package com.alphasystem.tanzil.test;
 
 import com.alphasystem.arabic.model.ArabicLetterType;
 import com.alphasystem.tanzil.TanzilTool;
+import com.alphasystem.tanzil.TranslationScript;
+import com.alphasystem.tanzil.TranslationTool;
 import com.alphasystem.tanzil.model.Chapter;
 import com.alphasystem.tanzil.model.Verse;
 import org.testng.annotations.Test;
 
 import java.util.List;
 
+import static com.alphasystem.tanzil.TranslationScript.SAHIH;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Reporter.log;
@@ -18,6 +21,7 @@ import static org.testng.Reporter.log;
 public class TanzilTest {
 
     private TanzilTool tanzilTool = TanzilTool.getInstance();
+    private TranslationTool translationTool = TranslationTool.getInstance();
 
     @Test
     public void testRetrieveChapter() {
@@ -46,7 +50,7 @@ public class TanzilTest {
     }
 
     @Test(dependsOnMethods = {"testRetrieveVerse"})
-    public void testQuarinPunctuations() {
+    public void testQuranicPunctuations() {
         int start = 1;
         int end = 114;
         for (int chapterNumber = start; chapterNumber <= end; chapterNumber++) {
@@ -70,5 +74,11 @@ public class TanzilTest {
                         verse.getTokens().size()), true);
             });
         }
+    }
+
+    @Test(dependsOnMethods = {"testQuranicPunctuations"})
+    public void testGetTranslation() {
+        Verse verse = translationTool.getVerse(18, 10, SAHIH);
+        log(format("%s: %s", verse.getChapterNumber(), verse.getText()), true);
     }
 }
