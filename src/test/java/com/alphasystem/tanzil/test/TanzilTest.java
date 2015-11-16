@@ -82,10 +82,4 @@ public class TanzilTest {
         log(format("%s: %s", verse.getChapterNumber(), verse.getText()), true);
     }
 
-    @Test(dependsOnMethods = {"testGetTranslation"})
-    public void testGetTranslationrange() {
-        Verse verse = translationTool.getVerse(18, 1, 10, SAHIH);
-        //verses.forEach(verse -> log(format("%s: %s", verse.getChapterNumber(), verse.getText()), true));
-        log(format("%s:%s, %s", verse.getChapterNumber(), verse.getVerseNumber(), verse.getText()), true);
-    }
 }
