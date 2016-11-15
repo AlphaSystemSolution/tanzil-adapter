@@ -1,6 +1,8 @@
 package com.alphasystem.tanzil.test;
 
 import com.alphasystem.arabic.model.ArabicLetterType;
+import com.alphasystem.arabic.model.ArabicWord;
+import com.alphasystem.tanzil.QuranScript;
 import com.alphasystem.tanzil.TanzilTool;
 import com.alphasystem.tanzil.TranslationTool;
 import com.alphasystem.tanzil.model.Chapter;
@@ -80,6 +82,29 @@ public class TanzilTest {
     public void testGetTranslation() {
         Verse verse = translationTool.getVerse(18, 10, SAHIH);
         log(format("%s: %s", verse.getChapterNumber(), verse.getText()), true);
+    }
+
+    @Test(dependsOnMethods = {"testGetTranslation"})
+    public void testGetTokens() {
+        for (QuranScript quranScript : QuranScript.values()) {
+            testGetTokens(8, quranScript);
+        }
+    }
+
+    private void testGetTokens(int chapterNumber, QuranScript script) {
+        Chapter chapter = tanzilTool.getChapter(chapterNumber, script);
+        final List<Verse> verses = chapter.getVerses();
+        int totalWords = 0;
+        int totalLetters = 0;
+        for (Verse verse : verses) {
+            final List<ArabicWord> tokens = verse.getTokens();
+            final int tokenCount = tokens.size();
+            totalWords += tokenCount;
+            for (ArabicWord token : tokens) {
+                totalLetters += token.getLength();
+            }
+        }
+        log(format("%s:- Total Words: %s, Total Letters: %s", script.name(), totalWords, totalLetters), true);
     }
 
 }
