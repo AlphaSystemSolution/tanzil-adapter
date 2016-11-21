@@ -1,8 +1,8 @@
 package com.alphasystem.tanzil;
 
 import com.alphasystem.tanzil.model.Chapter;
-import com.alphasystem.tanzil.model.Document;
 import com.alphasystem.tanzil.model.ContextHolder;
+import com.alphasystem.tanzil.model.Document;
 import com.alphasystem.tanzil.model.Verse;
 import com.alphasystem.util.JAXBTool;
 import org.apache.commons.jxpath.JXPathContext;
@@ -25,9 +25,9 @@ public class TranslationTool {
     private static final String VERSE_NUMBER_VARIABLE_NAME = "verseNumber";
     private static final String FIRST_VERSE_NUMBER_VARIABLE_NAME = "verseNumber1";
     private static final String LAST_VERSE_NUMBER_VARIABLE_NAME = "verseNumber2";
-    private static final String CHAPTER_XPATH = "sura[@chapterNumber = $chapterNumber]";
-    private static final String VERSE_XPATH = "sura[@chapterNumber = $chapterNumber]/verses[@verseNumber = $verseNumber]";
-    private static final String VERSE_BETWEEN_XPATH = "sura[@chapterNumber = $chapterNumber]/verses[@verseNumber >= $verseNumber1 and @verseNumber <= $verseNumber2]";
+    private static final String CHAPTER_XPATH = "chapters[@chapterNumber = $chapterNumber]";
+    private static final String VERSE_XPATH = "chapters[@chapterNumber = $chapterNumber]/verses[@verseNumber = $verseNumber]";
+    private static final String VERSE_BETWEEN_XPATH = "chapters[@chapterNumber = $chapterNumber]/verses[@verseNumber >= $verseNumber1 and @verseNumber <= $verseNumber2]";
 
     private static TranslationTool instance = new TranslationTool();
     private static Map<TranslationScript, ContextHolder> documentMap = new HashMap<>();

@@ -27,7 +27,7 @@ public class TanzilTest {
 
     @Test
     public void testRetrieveChapter() {
-        Integer chapterNumber = 3;
+        int chapterNumber = 3;
         Chapter chapter = tanzilTool.getChapter(chapterNumber, QURAN_SIMPLE_ENHANCED);
         assertEquals(chapter.getChapterNumber(), chapterNumber);
         log(format("Chapter Number: %s, Number of Verses: %s", chapterNumber, chapter.getVerses().size()), true);
@@ -52,6 +52,19 @@ public class TanzilTest {
     }
 
     @Test(dependsOnMethods = {"testRetrieveVerse"})
+    public void testRetrieveVerseRange() {
+        Integer chapterNumber = 18;
+        Integer fromVerse = 50;
+        Integer toVerse = 97;
+        int size = toVerse - fromVerse + 1;
+        final List<Verse> verses = tanzilTool.getVerseRange(chapterNumber, fromVerse, toVerse, QURAN_SIMPLE_ENHANCED);
+        for (Verse verse : verses) {
+            System.out.println(verse.getChapterNumber() + ":" + verse.getVerseNumber());
+        }
+        assertEquals(verses.size(), size);
+    }
+
+    @Test(dependsOnMethods = {"testRetrieveVerseRange"})
     public void testQuranicPunctuations() {
         int start = 1;
         int end = 114;
