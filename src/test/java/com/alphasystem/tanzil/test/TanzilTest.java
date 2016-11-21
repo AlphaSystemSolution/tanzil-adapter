@@ -2,6 +2,7 @@ package com.alphasystem.tanzil.test;
 
 import com.alphasystem.arabic.model.ArabicLetterType;
 import com.alphasystem.arabic.model.ArabicWord;
+import com.alphasystem.tanzil.MetaTool;
 import com.alphasystem.tanzil.QuranScript;
 import com.alphasystem.tanzil.TanzilTool;
 import com.alphasystem.tanzil.TranslationTool;
@@ -15,6 +16,7 @@ import static com.alphasystem.tanzil.QuranScript.QURAN_SIMPLE_ENHANCED;
 import static com.alphasystem.tanzil.TranslationScript.SAHIH;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Reporter.log;
 
 /**
@@ -23,6 +25,7 @@ import static org.testng.Reporter.log;
 public class TanzilTest {
 
     private TanzilTool tanzilTool = TanzilTool.getInstance();
+    private MetaTool metaTool = MetaTool.getInstance();
     private TranslationTool translationTool = TranslationTool.getInstance();
 
     @Test
@@ -37,7 +40,8 @@ public class TanzilTest {
     public void testRetrieveVerse() {
         Integer chapterNumber = 3;
         Integer verseNumber = 119;
-        Verse verse = tanzilTool.getVerse(chapterNumber, verseNumber, QURAN_SIMPLE_ENHANCED);
+        final Chapter chapter = tanzilTool.getVerse(chapterNumber, verseNumber, QURAN_SIMPLE_ENHANCED);
+        Verse verse = chapter.getVerses().get(0);
         log(format("Chapter Number: %s, Verse Number: %s", verse.getChapterNumber(), verse.getVerseNumber()), true);
         String text = verse.getText();
         String[] tokens = text.split(" ");
@@ -57,7 +61,8 @@ public class TanzilTest {
         Integer fromVerse = 50;
         Integer toVerse = 97;
         int size = toVerse - fromVerse + 1;
-        final List<Verse> verses = tanzilTool.getVerseRange(chapterNumber, fromVerse, toVerse, QURAN_SIMPLE_ENHANCED);
+        final Chapter chapter = tanzilTool.getVerseRange(chapterNumber, fromVerse, toVerse, QURAN_SIMPLE_ENHANCED);
+        final List<Verse> verses = chapter.getVerses();
         for (Verse verse : verses) {
             System.out.println(verse.getChapterNumber() + ":" + verse.getVerseNumber());
         }
@@ -98,6 +103,15 @@ public class TanzilTest {
     }
 
     @Test(dependsOnMethods = {"testGetTranslation"})
+    public void testMetaChapter(){
+        int chapterNumber = 2;
+        final com.alphasystem.tanzil.meta.model.Chapter chapter = metaTool.getChapter(chapterNumber);
+        assertNotNull(chapter);
+        log(format("ChapterNumber: %s, VerseCount: %s", chapter.getChapterNumber(), chapter.getVerseCount()), true);
+    }
+
+    // @Test(dependsOnMethods = {"testGetTranslation"})
+    @SuppressWarnings({"unused"})
     public void testGetTokens() {
         for (QuranScript quranScript : QuranScript.values()) {
             testGetTokens(8, quranScript);

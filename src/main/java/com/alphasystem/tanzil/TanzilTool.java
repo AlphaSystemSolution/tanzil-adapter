@@ -38,13 +38,12 @@ public final class TanzilTool {
     private static Map<QuranScript, ContextHolder> documentMap = new HashMap<>();
 
     private JAXBTool jaxbTool = new JAXBTool();
-    private ContextHolder metaContext;
+    private MetaTool metaTool = MetaTool.getInstance();
 
     /*
      * Do not let any one instantiate this class
      */
     private TanzilTool() {
-        getMetaContext();
         jaxbTool.withUnMarshallerListener(new Unmarshaller.Listener() {
 
             @Override
@@ -126,14 +125,7 @@ public final class TanzilTool {
         return contextHolder;
     }
 
-    private ContextHolder getMetaContext(){
-        if(metaContext == null){
-
-        }
-        return metaContext;
-    }
-
-    public Document getDocument( QuranScript script){
+    public Document getDocument(QuranScript script) {
         return getContext(script).getDocument();
     }
 
@@ -153,24 +145,22 @@ public final class TanzilTool {
      * @param verseNumber
      * @return
      */
-    public Verse getVerse(int chapterNumber, int verseNumber, QuranScript script) {
-        JXPathContext jxPathContext = getContext(script).getJxPathContext();
-        jxPathContext.getVariables().declareVariable(CHAPTER_NUMBER_VARIABLE_NAME, chapterNumber);
-        jxPathContext.getVariables().declareVariable(VERSE_NUMBER_VARIABLE_NAME, verseNumber);
-        return (Verse) jxPathContext.getValue(VERSE_XPATH);
+    public Chapter getVerse(int chapterNumber, int verseNumber, QuranScript script) {
+        return getVerseRange(chapterNumber, verseNumber, verseNumber, script);
     }
 
     @SuppressWarnings("unchecked")
-    public List<Verse> getVerseRange(int chapterNumber, int fromVerse, int toVerse, QuranScript script){
+    public Chapter getVerseRange(int chapterNumber, int fromVerse, int toVerse, QuranScript script) {
         JXPathContext jxPathContext = getContext(script).getJxPathContext();
         jxPathContext.getVariables().declareVariable(CHAPTER_NUMBER_VARIABLE_NAME, chapterNumber);
         jxPathContext.getVariables().declareVariable("fromVerse", fromVerse);
         jxPathContext.getVariables().declareVariable("toVerse", toVerse);
         final Iterator<Verse> iterate = jxPathContext.iterate(VERSE_RANGE_XPATH);
         List<Verse> verses = new ArrayList<>();
-        while (iterate.hasNext()){
+        while (iterate.hasNext()) {
             verses.add(iterate.next());
         }
-        return verses;
+        final com.alphasystem.tanzil.meta.model.Chapter metaChapter = metaTool.getChapter(chapterNumber);
+        return new Chapter().withChapterNumber(chapterNumber).withName(metaChapter.getName()).withVerses(verses);
     }
 }
