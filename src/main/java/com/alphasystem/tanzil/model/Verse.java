@@ -88,6 +88,11 @@ public class Verse {
      * {@link ArabicWord }
      */
     public ArabicWord getVerse() {
+        if (verse == null) {
+            if (text != null) {
+                setVerse(fromUnicode(text));
+            }
+        }
         return verse;
     }
 
@@ -161,9 +166,6 @@ public class Verse {
      */
     public void setText(String value) {
         this.text = value;
-        if(this.text !=  null){
-            setVerse(fromUnicode(value));
-        }
     }
 
     /**
@@ -243,10 +245,6 @@ public class Verse {
                 // but if it is the first token then merge it with next token
                 if (i == 0) {
                     String nextToken = _tokens[++i].trim();
-                    if (nextToken.length() == 1) {
-                        System.out.println(String.format("Two punctuation together??? For CN: %s, VN: %s",
-                                getChapterNumber(), getVerseNumber()));
-                    }
                     tokens.add(concatenateWithSpace(word, fromUnicode(nextToken)));
                 } else {
                     int lastIndex = tokens.size() - 1;
