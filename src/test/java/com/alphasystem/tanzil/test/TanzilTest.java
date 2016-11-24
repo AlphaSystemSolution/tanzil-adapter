@@ -98,8 +98,9 @@ public class TanzilTest {
 
     @Test(dependsOnMethods = {"testQuranicPunctuations"})
     public void testGetTranslation() {
-        Verse verse = translationTool.getVerse(18, 10, SAHIH);
-        log(format("%s: %s", verse.getChapterNumber(), verse.getText()), true);
+        Chapter chapter = translationTool.getVerse(18, 10, SAHIH);
+        final Verse verse = chapter.getVerses().get(0);
+        log(format("%s: %s", chapter.getChapterNumber(), verse.getText()), true);
     }
 
     @Test(dependsOnMethods = {"testGetTranslation"})
@@ -132,7 +133,7 @@ public class TanzilTest {
     }
 
     @Test(dependsOnMethods = {"searchUthmaniRemoveDiacritic"})
-    public void searchUthmani(){
+    public void searchUthmani() {
         final List<Chapter> chapters = tanzilTool.search(SEARCH_STRING, NONE, QURAN_UTHMANI);
         assertEquals(chapters.isEmpty(), true);
     }
