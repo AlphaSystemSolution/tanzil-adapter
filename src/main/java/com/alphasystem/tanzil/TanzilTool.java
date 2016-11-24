@@ -27,6 +27,10 @@ public final class TanzilTool {
         return instance;
     }
 
+    public List<Chapter> getChapters() {
+        return xQueryTool.getChapters();
+    }
+
     /**
      * @param chapterNumber
      * @param script

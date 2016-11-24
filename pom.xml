@@ -40,22 +40,6 @@
     </dependencies>
     <build>
         <plugins>
-            <!--plugin>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-xjc-plugin</artifactId>
-                <configuration>
-                    <xsdOptions>
-                        <xsdOption>
-                            <xsd>${basedir}/src/main/resources/tanzil.xsd</xsd>
-                            <bindingFile>${basedir}/src/main/resources/tanzil.xjb</bindingFile>
-                            <extensionArgs>
-                                <extensionArg>-Xfluent-api</extensionArg>
-                                <extensionArg>-Xcollection-setter-injector</extensionArg>
-                            </extensionArgs>
-                        </xsdOption>
-                    </xsdOptions>
-                </configuration>
-            </plugin-->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>

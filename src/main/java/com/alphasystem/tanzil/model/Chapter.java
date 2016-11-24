@@ -47,6 +47,9 @@ public class Chapter {
     protected int chapterNumber;
     @XmlAttribute(name = "name", required = true)
     protected String name;
+    @XmlAttribute(name = "ayas")
+    protected int verseCount;
+
 
     /**
      * Gets the value of the verses property.
@@ -115,6 +118,17 @@ public class Chapter {
      */
     public void setName(String value) {
         this.name = value;
+    }
+
+    public int getVerseCount() {
+        if(verseCount <= 0){
+            verseCount = verses.size();
+        }
+        return verseCount;
+    }
+
+    public void setVerseCount(int verseCount) {
+        this.verseCount = verseCount;
     }
 
     public Chapter withVerses(Verse... values) {

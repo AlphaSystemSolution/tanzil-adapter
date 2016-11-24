@@ -22,6 +22,7 @@ import static java.lang.String.format;
  */
 public class XQueryTool {
 
+    private static final String GET_CHAPTERS_QUERY = "getChapters";
     private static final String GET_CHAPTER_BY_CHAPTER_NUMBER_QUERY = "getChapterByChapterNumber";
     private static final String GET_VERSE_RANGE_QUERY = "getVerseRange";
     private static final String GET_SINGLE_VERSE_QUERY = "getSingleVerse";
@@ -35,11 +36,11 @@ public class XQueryTool {
     private static final String VERSE_NUMBER_VARIABLE_NAME = "verseNumber";
     private static final String SEARCH_STRING_VARIABLE_NAME = "searchString";
 
-
     private static XQueryTool instance;
     private JAXBTool jaxbTool = new JAXBTool();
     private final DocumentBuilder documentBuilder;
     private final Map<ScriptSupport, XdmNode> documentMap = new LinkedHashMap<>();
+    private final XQueryEvaluator getChapters;
     private final XQueryEvaluator getChapterByChapterNumber;
     private final XQueryEvaluator getVerseRange;
     private final XQueryEvaluator getSingleVerse;
@@ -52,6 +53,7 @@ public class XQueryTool {
 
         XQueryCompiler xQueryCompiler = processor.newXQueryCompiler();
 
+        getChapters = getCompiledQuery(xQueryCompiler, GET_CHAPTERS_QUERY);
         getChapterByChapterNumber = getCompiledQuery(xQueryCompiler, GET_CHAPTER_BY_CHAPTER_NUMBER_QUERY);
         getVerseRange = getCompiledQuery(xQueryCompiler, GET_VERSE_RANGE_QUERY);
         getSingleVerse = getCompiledQuery(xQueryCompiler, GET_SINGLE_VERSE_QUERY);
@@ -86,9 +88,22 @@ public class XQueryTool {
         }
     }
 
+    List<Chapter> getChapters() throws RuntimeException {
+        getChapters.setExternalVariable(new QName(DOC_VARIABLE_NAME), getDocument("tanzil.quran-data.xml"));
+        try {
+            final XdmValue result = getChapters.evaluate();
+            final Document document = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
+            return document.getChapters();
+        } catch (SaxonApiException e) {
+            throw new RuntimeException("Error running query {getChapters}", e);
+        } catch (JAXBException e) {
+            throw new RuntimeException("Error converting document", e);
+        }
+    }
+
     <S extends Enum<S> & ScriptSupport> Chapter executeGetChapterByChapterNumberQuery(int chapterNumber, S script)
             throws RuntimeException {
-        getChapterByChapterNumber.setExternalVariable(new QName(DOC_VARIABLE_NAME),  getDocument(script));
+        getChapterByChapterNumber.setExternalVariable(new QName(DOC_VARIABLE_NAME), getDocument(script));
         getChapterByChapterNumber.setExternalVariable(new QName(CHAPTER_NUMBER_VARIABLE_NAME), new XdmAtomicValue(chapterNumber));
         try {
             final XdmValue result = getChapterByChapterNumber.evaluate();
@@ -107,7 +122,7 @@ public class XQueryTool {
 
     <S extends Enum<S> & ScriptSupport> Chapter executeGetVerseRangeQuery(int chapterNumber, int fromVerse, int toVerse,
                                                                           S script) throws RuntimeException {
-        getVerseRange.setExternalVariable(new QName(DOC_VARIABLE_NAME),  getDocument(script));
+        getVerseRange.setExternalVariable(new QName(DOC_VARIABLE_NAME), getDocument(script));
         getVerseRange.setExternalVariable(new QName(CHAPTER_NUMBER_VARIABLE_NAME), new XdmAtomicValue(chapterNumber));
         getVerseRange.setExternalVariable(new QName(FROM_VERSE_VARIABLE_NAME), new XdmAtomicValue(fromVerse));
         getVerseRange.setExternalVariable(new QName(TO_VERSE_VARIABLE_NAME), new XdmAtomicValue(toVerse));
@@ -148,7 +163,7 @@ public class XQueryTool {
 
     private <S extends Enum<S> & ScriptSupport> List<Chapter> executeSearch(String searchString, S script)
             throws RuntimeException {
-        search.setExternalVariable(new QName(DOC_VARIABLE_NAME),  getDocument(script));
+        search.setExternalVariable(new QName(DOC_VARIABLE_NAME), getDocument(script));
         search.setExternalVariable(new QName(SEARCH_STRING_VARIABLE_NAME), new XdmAtomicValue(searchString));
         try {
             final XdmValue result = search.evaluate();
@@ -222,6 +237,14 @@ public class XQueryTool {
             documentMap.put(script, document);
         }
         return document;
+    }
+
+    private XdmNode getDocument(String path) throws RuntimeException {
+        try {
+            return documentBuilder.build(new StreamSource(getResourceAsStream(path)));
+        } catch (SaxonApiException e) {
+            throw new RuntimeException(format("Error loading document for {%s}"), e);
+        }
     }
 
 }

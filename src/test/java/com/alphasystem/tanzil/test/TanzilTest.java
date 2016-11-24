@@ -29,6 +29,12 @@ public class TanzilTest {
     private TranslationTool translationTool = TranslationTool.getInstance();
 
     @Test
+    public void testGetChapters(){
+        final List<Chapter> chapters = tanzilTool.getChapters();
+        assertEquals(chapters.size(), 114);
+    }
+
+    @Test(dependsOnMethods = {"testGetChapters"})
     public void testRetrieveChapter() {
         int chapterNumber = 3;
         Chapter chapter = tanzilTool.getChapter(chapterNumber, QURAN_SIMPLE_ENHANCED);
