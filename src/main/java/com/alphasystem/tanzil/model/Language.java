@@ -5,15 +5,21 @@ package com.alphasystem.tanzil.model;
  */
 public enum Language {
 
-    ENGLISH("en");
+    ENGLISH("en", "English");
 
+    private final String description;
     private final String value;
 
-    Language(String value) {
+    Language(String value, String description) {
         this.value = value;
+        this.description = description;
     }
 
     public String getValue() {
         return value;
+    }
+
+    public String getDescription() {
+        return description;
     }
 }

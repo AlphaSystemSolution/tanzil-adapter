@@ -10,19 +10,26 @@ import static java.lang.String.format;
  */
 public enum TranslationScript implements ScriptSupport {
 
-    SAHIH(ENGLISH, "sahih");
+    SAHIH(ENGLISH, "sahih", "Shaih International");
 
     private final Language language;
     private final String script;
+    private final String description;
 
-    TranslationScript(Language language, String script) {
+    TranslationScript(Language language, String script, String description) {
         this.language = language;
         this.script = script;
+        this.description = description;
     }
 
     @Override
     public String getScript() {
         return script;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
     }
 
     public Language getLanguage() {

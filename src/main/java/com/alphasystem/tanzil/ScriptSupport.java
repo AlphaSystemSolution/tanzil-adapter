@@ -6,5 +6,6 @@ package com.alphasystem.tanzil;
 public interface ScriptSupport {
 
     String getScript();
+    String getDescription();
     String getPath();
 }
