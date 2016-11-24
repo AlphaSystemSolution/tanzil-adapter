@@ -15,12 +15,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static com.alphasystem.arabic.model.ArabicWord.concatenateWithSpace;
+import static com.alphasystem.arabic.model.ArabicWord.fromUnicode;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 
 /**
  * <p>Java class for aya complex type.
- *
+ * <p>
  * <p>The following schema fragment specifies the expected content contained within this class.
- *
+ * <p>
  * <pre>
  * &lt;complexType name="aya"&gt;
  *   &lt;complexContent&gt;
@@ -37,8 +41,6 @@ import java.util.List;
  *   &lt;/complexContent&gt;
  * &lt;/complexType&gt;
  * </pre>
- *
- *
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "aya", propOrder = {
@@ -62,10 +64,8 @@ public class Verse {
     /**
      * Gets the value of the chapterNumber property.
      *
-     * @return
-     *     possible object is
-     *     {@link Integer }
-     *
+     * @return possible object is
+     * {@link Integer }
      */
     public Integer getChapterNumber() {
         return chapterNumber;
@@ -74,10 +74,8 @@ public class Verse {
     /**
      * Sets the value of the chapterNumber property.
      *
-     * @param value
-     *     allowed object is
-     *     {@link Integer }
-     *
+     * @param value allowed object is
+     *              {@link Integer }
      */
     public void setChapterNumber(Integer value) {
         this.chapterNumber = value;
@@ -86,10 +84,8 @@ public class Verse {
     /**
      * Gets the value of the verse property.
      *
-     * @return
-     *     possible object is
-     *     {@link ArabicWord }
-     *
+     * @return possible object is
+     * {@link ArabicWord }
      */
     public ArabicWord getVerse() {
         return verse;
@@ -98,10 +94,8 @@ public class Verse {
     /**
      * Sets the value of the verse property.
      *
-     * @param value
-     *     allowed object is
-     *     {@link ArabicWord }
-     *
+     * @param value allowed object is
+     *              {@link ArabicWord }
      */
     public void setVerse(ArabicWord value) {
         this.verse = value;
@@ -109,36 +103,34 @@ public class Verse {
 
     /**
      * Gets the value of the tokens property.
-     *
+     * <p>
      * <p>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the tokens property.
-     *
+     * <p>
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getTokens().add(newItem);
      * </pre>
-     *
-     *
+     * <p>
+     * <p>
      * <p>
      * Objects of the following type(s) are allowed in the list
      * {@link ArabicWord }
-     *
-     *
      */
     public List<ArabicWord> getTokens() {
         if (tokens == null) {
-            tokens = new ArrayList<ArabicWord>();
+            tokens = new ArrayList<>();
+            tokens.addAll(loadTokens());
         }
         return this.tokens;
     }
 
     /**
      * Gets the value of the verseNumber property.
-     *
      */
     public int getVerseNumber() {
         return verseNumber;
@@ -146,7 +138,6 @@ public class Verse {
 
     /**
      * Sets the value of the verseNumber property.
-     *
      */
     public void setVerseNumber(int value) {
         this.verseNumber = value;
@@ -155,10 +146,8 @@ public class Verse {
     /**
      * Gets the value of the text property.
      *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
+     * @return possible object is
+     * {@link String }
      */
     public String getText() {
         return text;
@@ -167,22 +156,21 @@ public class Verse {
     /**
      * Sets the value of the text property.
      *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setText(String value) {
         this.text = value;
+        if(this.text !=  null){
+            setVerse(fromUnicode(value));
+        }
     }
 
     /**
      * Gets the value of the bismillah property.
      *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
+     * @return possible object is
+     * {@link String }
      */
     public String getBismillah() {
         return bismillah;
@@ -191,10 +179,8 @@ public class Verse {
     /**
      * Sets the value of the bismillah property.
      *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setBismillah(String value) {
         this.bismillah = value;
@@ -211,8 +197,8 @@ public class Verse {
     }
 
     public Verse withTokens(ArabicWord... values) {
-        if (values!= null) {
-            for (ArabicWord value: values) {
+        if (values != null) {
+            for (ArabicWord value : values) {
                 getTokens().add(value);
             }
         }
@@ -220,7 +206,7 @@ public class Verse {
     }
 
     public Verse withTokens(Collection<ArabicWord> values) {
-        if (values!= null) {
+        if (values != null) {
             getTokens().addAll(values);
         }
         return this;
@@ -239,6 +225,39 @@ public class Verse {
     public Verse withBismillah(String value) {
         setBismillah(value);
         return this;
+    }
+
+    private List<ArabicWord> loadTokens() {
+        List<ArabicWord> tokens = new ArrayList<>();
+        String[] _tokens = getText().split(" ");
+        for (int i = 0; i < _tokens.length; i++) {
+            String token = _tokens[i];
+            if (isBlank(token)) {
+                continue;
+            }
+            token = token.trim();
+            ArabicWord word = fromUnicode(token);
+            if (token.length() == 1) {
+                // one of punctuation character
+                // logic is to merge punctuation with the previous token,
+                // but if it is the first token then merge it with next token
+                if (i == 0) {
+                    String nextToken = _tokens[++i].trim();
+                    if (nextToken.length() == 1) {
+                        System.out.println(String.format("Two punctuation together??? For CN: %s, VN: %s",
+                                getChapterNumber(), getVerseNumber()));
+                    }
+                    tokens.add(concatenateWithSpace(word, fromUnicode(nextToken)));
+                } else {
+                    int lastIndex = tokens.size() - 1;
+                    ArabicWord lastWord = tokens.get(lastIndex);
+                    tokens.set(lastIndex, concatenateWithSpace(lastWord, word));
+                }
+            } else {
+                tokens.add(word);
+            }
+        }
+        return tokens;
     }
 
 }

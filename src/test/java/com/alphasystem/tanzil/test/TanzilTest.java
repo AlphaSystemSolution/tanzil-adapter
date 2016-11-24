@@ -7,13 +7,23 @@ import com.alphasystem.tanzil.QuranScript;
 import com.alphasystem.tanzil.TanzilTool;
 import com.alphasystem.tanzil.TranslationTool;
 import com.alphasystem.tanzil.model.Chapter;
+import com.alphasystem.tanzil.model.Document;
 import com.alphasystem.tanzil.model.Verse;
+import com.alphasystem.util.JAXBTool;
+import net.sf.saxon.s9api.*;
 import org.testng.annotations.Test;
 
+import javax.xml.transform.stream.StreamSource;
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
+import static com.alphasystem.arabic.model.ArabicLetterType.*;
+import static com.alphasystem.arabic.model.ArabicWord.getWord;
+import static com.alphasystem.tanzil.QuranScript.QURAN_SIMPLE_CLEAN;
 import static com.alphasystem.tanzil.QuranScript.QURAN_SIMPLE_ENHANCED;
 import static com.alphasystem.tanzil.TranslationScript.SAHIH;
+import static com.alphasystem.util.AppUtil.NEW_LINE;
+import static com.alphasystem.util.AppUtil.getResourceAsStream;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -103,11 +113,107 @@ public class TanzilTest {
     }
 
     @Test(dependsOnMethods = {"testGetTranslation"})
-    public void testMetaChapter(){
+    public void testMetaChapter() {
         int chapterNumber = 2;
         final com.alphasystem.tanzil.meta.model.Chapter chapter = metaTool.getChapter(chapterNumber);
         assertNotNull(chapter);
         log(format("ChapterNumber: %s, VerseCount: %s", chapter.getChapterNumber(), chapter.getVerseCount()), true);
+    }
+
+    @Test // (dependsOnMethods = {"testMetaChapter"})
+    public void search() {
+        String searchString = "كتاب";
+        final List<Chapter> chapters = tanzilTool.search(searchString, QURAN_SIMPLE_CLEAN);
+        assertEquals(chapters.isEmpty(), false);
+        int totalNumOfVerses = 0;
+        for (Chapter chapter : chapters) {
+            totalNumOfVerses += chapter.getVerses().size();
+        }
+        log("" + totalNumOfVerses + " : " + chapters.size(), true);
+        chapters.forEach(chapter -> {
+            final List<Verse> verses = chapter.getVerses();
+            final int chapterNumber = chapter.getChapterNumber();
+            verses.forEach(verse -> log(format("%s:%s", chapterNumber, verse.getVerseNumber()), true));
+        });
+    }
+
+    @Test(dependsOnMethods = {"search"})
+    public void xqueryRetrieveChapterTest() {
+        Processor processor = new Processor(false);
+        final DocumentBuilder documentBuilder = processor.newDocumentBuilder();
+        try {
+            final XdmNode document = documentBuilder.build(new StreamSource(getResourceAsStream(QURAN_SIMPLE_ENHANCED.getPath())));
+            final XQueryCompiler xQueryCompiler = processor.newXQueryCompiler();
+            final XQueryExecutable xQueryExecutable = xQueryCompiler.compile("declare variable $doc external; " +
+                    "declare variable $chapterNumber external;" +
+                    "<quran>{$doc/quran/sura[@index=$chapterNumber ]}</quran>");
+            final XQueryEvaluator xQueryEvaluator = xQueryExecutable.load();
+
+            xQueryEvaluator.setExternalVariable(new QName("doc"), document);
+            xQueryEvaluator.setExternalVariable(new QName("chapterNumber"), new XdmAtomicValue(3));
+
+            final XdmValue result = xQueryEvaluator.evaluate();
+            JAXBTool jaxbTool = new JAXBTool();
+            final Document document1 = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
+            final Chapter chapter = document1.getChapters().get(0);
+            log(format("Chapter Number: %s, Number of Verses: %s", chapter.getChapterNumber(), chapter.getVerses().size()), true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //@Test(dependsOnMethods = {"xqueryRetrieveChapterTest"})
+    @Test
+    public void xquerySearchTest() {
+        Processor processor = new Processor(false);
+        final DocumentBuilder documentBuilder = processor.newDocumentBuilder();
+        try {
+            final XdmNode document = documentBuilder.build(new StreamSource(getResourceAsStream(QURAN_SIMPLE_CLEAN.getPath())));
+            final XQueryCompiler xQueryCompiler = processor.newXQueryCompiler();
+            final StringBuilder query = new StringBuilder();
+            query.append("declare variable $doc external;").append(NEW_LINE)
+                    .append("declare variable $searchString external;").append(NEW_LINE)
+                    .append("for $verse in $doc/quran/sura/aya[contains(@text, $searchString)]").append(NEW_LINE)
+                    .append("let $chapter := $verse/parent::*").append(NEW_LINE)
+                    .append("let $chapterNumber := string($chapter/@index)").append(NEW_LINE)
+                    //.append("let $chapterName := string($chapter/@name)").append(NEW_LINE)
+                    .append("let $verseNumber := string($verse/@index)").append(NEW_LINE)
+                    // .append("return <sura index=\"{$chapterNumber}\" name=\"{$chapterName}\">{$verse}</sura>");
+                    .append("return <result chapterNumber=\"{$chapterNumber}\" verseNumber=\"{$verseNumber}\"/>");
+
+            System.out.println(query);
+            System.out.println("________________________________________________");
+            System.out.println();
+            final XQueryExecutable xQueryExecutable = xQueryCompiler.compile(query.toString());
+            final XQueryEvaluator xQueryEvaluator = xQueryExecutable.load();
+
+            xQueryEvaluator.setExternalVariable(new QName("doc"), document);
+            final String searchString = getWord(KAF, TA, ALIF, BA).toUnicode();
+            xQueryEvaluator.setExternalVariable(new QName("searchString"), new XdmAtomicValue(searchString));
+
+            final XdmValue items = xQueryEvaluator.evaluate();
+            System.out.println(format("<quran>%s</<quran>", items));
+        } catch (SaxonApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void verseCount() {
+        int totalNumberOfVerses = 0;
+        int maxNumberOfVerses = 788;
+        int startChapterNumber = 1;
+        for (int i = 1; i <= 114; i++) {
+            final com.alphasystem.tanzil.meta.model.Chapter chapter = metaTool.getChapter(i);
+            totalNumberOfVerses += chapter.getVerseCount();
+            final int chapterNumber = chapter.getChapterNumber();
+            if ((totalNumberOfVerses > maxNumberOfVerses) || (i >= 114)) {
+                log(format("Number of verses in (%s, %s) are %s", startChapterNumber, chapterNumber,
+                        totalNumberOfVerses), true);
+                startChapterNumber = chapterNumber + 1;
+                totalNumberOfVerses = 0;
+            }
+        }
     }
 
     // @Test(dependsOnMethods = {"testGetTranslation"})
