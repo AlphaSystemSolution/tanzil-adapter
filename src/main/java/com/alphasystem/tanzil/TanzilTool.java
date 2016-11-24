@@ -4,15 +4,12 @@ import com.alphasystem.tanzil.model.Chapter;
 
 import java.util.List;
 
+import static com.alphasystem.tanzil.SearchOption.NONE;
+
 /**
  * @author sali
  */
 public final class TanzilTool {
-
-    public static final String QURANIC_SCRIPT = "quranic_script";
-    private static final String CHAPTER_NUMBER_VARIABLE_NAME = "chapterNumber";
-    private static final String VERSE_RANGE_XPATH = "chapters[@chapterNumber = $chapterNumber]/verses[@verseNumber >= $fromVerse and @verseNumber <= $toVerse]";
-    private static final String SEARCH_XPATH = "chapters/verses[contains(@text, $searchString)]";
 
     private static TanzilTool instance;
     private XQueryTool xQueryTool = XQueryTool.getInstance();
@@ -53,7 +50,11 @@ public final class TanzilTool {
     }
 
     public List<Chapter> search(String searchString, QuranScript script) {
-        return xQueryTool.executeSearch(searchString, script);
+        return search(searchString, NONE, script);
+    }
+
+    public List<Chapter> search(String searchString, SearchOption searchOption, QuranScript script) {
+        return xQueryTool.executeSearch(searchString, searchOption, script);
     }
 
 }

@@ -11,6 +11,8 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.alphasystem.tanzil.QuranScript.QURAN_SIMPLE_CLEAN;
+import static com.alphasystem.tanzil.SearchOption.NONE;
 import static com.alphasystem.util.AppUtil.NEW_LINE;
 import static com.alphasystem.util.AppUtil.getResourceAsStream;
 import static java.lang.String.format;
@@ -24,11 +26,15 @@ public class XQueryTool {
     private static final String GET_VERSE_RANGE_QUERY = "getVerseRange";
     private static final String GET_SINGLE_VERSE_QUERY = "getSingleVerse";
     private static final String SEARCH_QUERY = "search";
+    private static final String SEARCH_NO_DIACRITIC_QUERY = "searchNoDiacritic";
     private static final String DOC_VARIABLE_NAME = "doc";
+    private static final String DOC_CLEAN_VARIABLE_NAME = "docClean";
     private static final String CHAPTER_NUMBER_VARIABLE_NAME = "chapterNumber";
     private static final String FROM_VERSE_VARIABLE_NAME = "fromVerse";
     private static final String TO_VERSE_VARIABLE_NAME = "toVerse";
     private static final String VERSE_NUMBER_VARIABLE_NAME = "verseNumber";
+    private static final String SEARCH_STRING_VARIABLE_NAME = "searchString";
+
 
     private static XQueryTool instance;
     private JAXBTool jaxbTool = new JAXBTool();
@@ -38,6 +44,7 @@ public class XQueryTool {
     private final XQueryEvaluator getVerseRange;
     private final XQueryEvaluator getSingleVerse;
     private final XQueryEvaluator search;
+    private final XQueryEvaluator searchNoDiacritic;
 
     private XQueryTool() throws RuntimeException {
         Processor processor = new Processor(false);
@@ -49,6 +56,9 @@ public class XQueryTool {
         getVerseRange = getCompiledQuery(xQueryCompiler, GET_VERSE_RANGE_QUERY);
         getSingleVerse = getCompiledQuery(xQueryCompiler, GET_SINGLE_VERSE_QUERY);
         search = getCompiledQuery(xQueryCompiler, SEARCH_QUERY);
+        searchNoDiacritic = getCompiledQuery(xQueryCompiler, SEARCH_NO_DIACRITIC_QUERY);
+
+        getDocument(QURAN_SIMPLE_CLEAN);
     }
 
     public static synchronized XQueryTool getInstance() throws RuntimeException {
@@ -139,7 +149,7 @@ public class XQueryTool {
     List<Chapter> executeSearch(String searchString, QuranScript script) {
         XdmNode document = getDocument(script);
         search.setExternalVariable(new QName(DOC_VARIABLE_NAME), document);
-        search.setExternalVariable(new QName("searchString"), new XdmAtomicValue(searchString));
+        search.setExternalVariable(new QName(SEARCH_STRING_VARIABLE_NAME), new XdmAtomicValue(searchString));
         try {
             final XdmValue result = search.evaluate();
             final Document doc = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
@@ -164,6 +174,40 @@ public class XQueryTool {
             throw new RuntimeException(format("Error converting document for searchString {%s} and script {%s}",
                     searchString, script), e);
         }
+    }
+
+    List<Chapter> executeSearch(String searchString, SearchOption searchOption, QuranScript script) {
+        searchOption = (searchOption == null) ? NONE : searchOption;
+        if (searchOption.equals(NONE) || QURAN_SIMPLE_CLEAN.equals(script)) {
+            // SearchOption "NONE" means search given string in given script
+            return executeSearch(searchString, script);
+        }
+        // if SearchOption is "REMOVE_DIACRITIC" then gets the search result first
+
+        searchNoDiacritic.setExternalVariable(new QName(DOC_CLEAN_VARIABLE_NAME), getDocument(QURAN_SIMPLE_CLEAN));
+        searchNoDiacritic.setExternalVariable(new QName(DOC_VARIABLE_NAME), getDocument(script));
+        searchNoDiacritic.setExternalVariable(new QName(SEARCH_STRING_VARIABLE_NAME), new XdmAtomicValue(searchString));
+
+        try {
+            final XdmValue result = searchNoDiacritic.evaluate();
+            final Document doc = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
+            final List<Chapter> chapters = doc.getChapters();
+            final Iterator<Chapter> iterator = chapters.iterator();
+            while (iterator.hasNext()) {
+                final Chapter chapter = iterator.next();
+                if (chapter.getVerses().isEmpty()) {
+                    iterator.remove();
+                }
+            }
+            return chapters;
+        } catch (SaxonApiException e) {
+            throw new RuntimeException(format("Error running query {searchNoDiacritic} for searchString {%s} and script {%s}",
+                    searchString, script), e);
+        } catch (JAXBException e) {
+            throw new RuntimeException(format("Error converting document for searchString {%s} and script {%s}",
+                    searchString, script), e);
+        }
+
     }
 
     private XdmNode getDocument(QuranScript script) throws RuntimeException {
