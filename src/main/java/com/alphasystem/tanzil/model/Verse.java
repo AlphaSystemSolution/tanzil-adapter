@@ -60,6 +60,8 @@ public class Verse {
     protected String text;
     @XmlAttribute(name = "bismillah")
     protected String bismillah;
+    @XmlTransient
+    protected String translation;
 
     /**
      * Gets the value of the chapterNumber property.
@@ -186,6 +188,26 @@ public class Verse {
      */
     public void setBismillah(String value) {
         this.bismillah = value;
+    }
+
+    /**
+     * Gets the value of the translation property.
+     *
+     * @return possible object is
+     * {@link String }
+     */
+    public String getTranslation() {
+        return translation;
+    }
+
+    /**
+     * Sets the value of the translation property.
+     *
+     * @param value allowed object is
+     *              {@link String }
+     */
+    public void setTranslation(String value) {
+        this.translation = value;
     }
 
     public Verse withChapterNumber(Integer value) {

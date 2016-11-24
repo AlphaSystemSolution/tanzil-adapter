@@ -8,7 +8,7 @@ import static java.lang.String.format;
 /**
  * @author sali
  */
-public enum TranslationScript {
+public enum TranslationScript implements ScriptSupport {
 
     SAHIH(ENGLISH, "sahih");
 
@@ -20,6 +20,7 @@ public enum TranslationScript {
         this.script = script;
     }
 
+    @Override
     public String getScript() {
         return script;
     }
@@ -28,6 +29,7 @@ public enum TranslationScript {
         return language;
     }
 
+    @Override
     public String getPath() {
         return format("tanzil.translations.%s.%s.xml", getLanguage().getValue(), getScript());
     }

@@ -39,7 +39,7 @@ public class XQueryTool {
     private static XQueryTool instance;
     private JAXBTool jaxbTool = new JAXBTool();
     private final DocumentBuilder documentBuilder;
-    private final Map<QuranScript, XdmNode> documentMap = new LinkedHashMap<>();
+    private final Map<ScriptSupport, XdmNode> documentMap = new LinkedHashMap<>();
     private final XQueryEvaluator getChapterByChapterNumber;
     private final XQueryEvaluator getVerseRange;
     private final XQueryEvaluator getSingleVerse;
@@ -86,7 +86,8 @@ public class XQueryTool {
         }
     }
 
-    Chapter executeGetChapterByChapterNumberQuery(int chapterNumber, QuranScript script) throws RuntimeException {
+    <S extends Enum<S> & ScriptSupport> Chapter executeGetChapterByChapterNumberQuery(int chapterNumber, S script)
+            throws RuntimeException {
         XdmNode document = getDocument(script);
         getChapterByChapterNumber.setExternalVariable(new QName(DOC_VARIABLE_NAME), document);
         getChapterByChapterNumber.setExternalVariable(new QName(CHAPTER_NUMBER_VARIABLE_NAME), new XdmAtomicValue(chapterNumber));
@@ -105,7 +106,8 @@ public class XQueryTool {
         }
     }
 
-    Chapter executeGetVerseRangeQuery(int chapterNumber, int fromVerse, int toVerse, QuranScript script) {
+    <S extends Enum<S> & ScriptSupport> Chapter executeGetVerseRangeQuery(int chapterNumber, int fromVerse, int toVerse,
+                                                                          S script) throws RuntimeException {
         XdmNode document = getDocument(script);
         getVerseRange.setExternalVariable(new QName(DOC_VARIABLE_NAME), document);
         getVerseRange.setExternalVariable(new QName(CHAPTER_NUMBER_VARIABLE_NAME), new XdmAtomicValue(chapterNumber));
@@ -126,7 +128,8 @@ public class XQueryTool {
         }
     }
 
-    Chapter executeGetSingleVerseQuery(int chapterNumber, int verseNumber, QuranScript script) {
+    <S extends Enum<S> & ScriptSupport> Chapter executeGetSingleVerseQuery(int chapterNumber, int verseNumber, S script)
+            throws RuntimeException {
         XdmNode document = getDocument(script);
         getSingleVerse.setExternalVariable(new QName(DOC_VARIABLE_NAME), document);
         getSingleVerse.setExternalVariable(new QName(CHAPTER_NUMBER_VARIABLE_NAME), new XdmAtomicValue(chapterNumber));
@@ -146,7 +149,8 @@ public class XQueryTool {
         }
     }
 
-    List<Chapter> executeSearch(String searchString, QuranScript script) {
+    private <S extends Enum<S> & ScriptSupport> List<Chapter> executeSearch(String searchString, S script)
+            throws RuntimeException {
         XdmNode document = getDocument(script);
         search.setExternalVariable(new QName(DOC_VARIABLE_NAME), document);
         search.setExternalVariable(new QName(SEARCH_STRING_VARIABLE_NAME), new XdmAtomicValue(searchString));
@@ -176,7 +180,8 @@ public class XQueryTool {
         }
     }
 
-    List<Chapter> executeSearch(String searchString, SearchOption searchOption, QuranScript script) {
+    <S extends Enum<S> & ScriptSupport> List<Chapter> executeSearch(String searchString, SearchOption searchOption,
+                                                                    S script) throws RuntimeException {
         searchOption = (searchOption == null) ? NONE : searchOption;
         if (searchOption.equals(NONE) || QURAN_SIMPLE_CLEAN.equals(script)) {
             // SearchOption "NONE" means search given string in given script
@@ -210,7 +215,7 @@ public class XQueryTool {
 
     }
 
-    private XdmNode getDocument(QuranScript script) throws RuntimeException {
+    private <S extends Enum<S> & ScriptSupport> XdmNode getDocument(S script) throws RuntimeException {
         XdmNode document = documentMap.get(script);
         if (document == null) {
             try {

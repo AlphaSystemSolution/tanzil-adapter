@@ -5,7 +5,7 @@ import static java.lang.String.format;
 /**
  * @author sali
  */
-public enum QuranScript {
+public enum QuranScript implements ScriptSupport{
 
     QURAN_SIMPLE("quran-simple"),
 
@@ -26,10 +26,12 @@ public enum QuranScript {
 
     }
 
+    @Override
     public String getScript() {
         return script;
     }
 
+    @Override
     public String getPath(){
         return format("tanzil.%s.xml", getScript());
     }
