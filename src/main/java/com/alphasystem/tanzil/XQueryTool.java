@@ -88,13 +88,12 @@ public class XQueryTool {
 
     <S extends Enum<S> & ScriptSupport> Chapter executeGetChapterByChapterNumberQuery(int chapterNumber, S script)
             throws RuntimeException {
-        XdmNode document = getDocument(script);
-        getChapterByChapterNumber.setExternalVariable(new QName(DOC_VARIABLE_NAME), document);
+        getChapterByChapterNumber.setExternalVariable(new QName(DOC_VARIABLE_NAME),  getDocument(script));
         getChapterByChapterNumber.setExternalVariable(new QName(CHAPTER_NUMBER_VARIABLE_NAME), new XdmAtomicValue(chapterNumber));
         try {
             final XdmValue result = getChapterByChapterNumber.evaluate();
-            final Document doc = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
-            final Chapter chapter = doc.getChapters().get(0);
+            final Document document = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
+            final Chapter chapter = document.getChapters().get(0);
             chapter.getVerses().forEach(verse -> verse.setChapterNumber(chapterNumber));
             return chapter;
         } catch (SaxonApiException e) {
@@ -108,15 +107,14 @@ public class XQueryTool {
 
     <S extends Enum<S> & ScriptSupport> Chapter executeGetVerseRangeQuery(int chapterNumber, int fromVerse, int toVerse,
                                                                           S script) throws RuntimeException {
-        XdmNode document = getDocument(script);
-        getVerseRange.setExternalVariable(new QName(DOC_VARIABLE_NAME), document);
+        getVerseRange.setExternalVariable(new QName(DOC_VARIABLE_NAME),  getDocument(script));
         getVerseRange.setExternalVariable(new QName(CHAPTER_NUMBER_VARIABLE_NAME), new XdmAtomicValue(chapterNumber));
         getVerseRange.setExternalVariable(new QName(FROM_VERSE_VARIABLE_NAME), new XdmAtomicValue(fromVerse));
         getVerseRange.setExternalVariable(new QName(TO_VERSE_VARIABLE_NAME), new XdmAtomicValue(toVerse));
         try {
             final XdmValue result = getVerseRange.evaluate();
-            final Document doc = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
-            final Chapter chapter = doc.getChapters().get(0);
+            final Document document = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
+            final Chapter chapter = document.getChapters().get(0);
             chapter.getVerses().forEach(verse -> verse.setChapterNumber(chapterNumber));
             return chapter;
         } catch (SaxonApiException e) {
@@ -130,14 +128,13 @@ public class XQueryTool {
 
     <S extends Enum<S> & ScriptSupport> Chapter executeGetSingleVerseQuery(int chapterNumber, int verseNumber, S script)
             throws RuntimeException {
-        XdmNode document = getDocument(script);
-        getSingleVerse.setExternalVariable(new QName(DOC_VARIABLE_NAME), document);
+        getSingleVerse.setExternalVariable(new QName(DOC_VARIABLE_NAME), getDocument(script));
         getSingleVerse.setExternalVariable(new QName(CHAPTER_NUMBER_VARIABLE_NAME), new XdmAtomicValue(chapterNumber));
         getSingleVerse.setExternalVariable(new QName(VERSE_NUMBER_VARIABLE_NAME), new XdmAtomicValue(verseNumber));
         try {
             final XdmValue result = getSingleVerse.evaluate();
-            final Document doc = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
-            final Chapter chapter = doc.getChapters().get(0);
+            final Document document = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
+            final Chapter chapter = document.getChapters().get(0);
             chapter.getVerses().forEach(verse -> verse.setChapterNumber(chapterNumber));
             return chapter;
         } catch (SaxonApiException e) {
@@ -151,13 +148,12 @@ public class XQueryTool {
 
     private <S extends Enum<S> & ScriptSupport> List<Chapter> executeSearch(String searchString, S script)
             throws RuntimeException {
-        XdmNode document = getDocument(script);
-        search.setExternalVariable(new QName(DOC_VARIABLE_NAME), document);
+        search.setExternalVariable(new QName(DOC_VARIABLE_NAME),  getDocument(script));
         search.setExternalVariable(new QName(SEARCH_STRING_VARIABLE_NAME), new XdmAtomicValue(searchString));
         try {
             final XdmValue result = search.evaluate();
-            final Document doc = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
-            final List<Chapter> chapters = doc.getChapters();
+            final Document document = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
+            final List<Chapter> chapters = document.getChapters();
             if (chapters == null || chapters.isEmpty()) {
                 return new ArrayList<>();
             }
