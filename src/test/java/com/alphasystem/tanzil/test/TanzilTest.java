@@ -5,6 +5,7 @@ import com.alphasystem.arabic.model.ArabicWord;
 import com.alphasystem.tanzil.TanzilTool;
 import com.alphasystem.tanzil.TranslationTool;
 import com.alphasystem.tanzil.model.Chapter;
+import com.alphasystem.tanzil.model.Document;
 import com.alphasystem.tanzil.model.Verse;
 import org.testng.annotations.Test;
 
@@ -29,15 +30,17 @@ public class TanzilTest {
     private TranslationTool translationTool = TranslationTool.getInstance();
 
     @Test
-    public void testGetChapters(){
-        final List<Chapter> chapters = tanzilTool.getChapters();
+    public void testGetChapters() {
+        final Document document = tanzilTool.getChapters();
+        final List<Chapter> chapters = document.getChapters();
         assertEquals(chapters.size(), 114);
     }
 
     @Test(dependsOnMethods = {"testGetChapters"})
     public void testRetrieveChapter() {
         int chapterNumber = 3;
-        Chapter chapter = tanzilTool.getChapter(chapterNumber, QURAN_SIMPLE_ENHANCED);
+        final Document document = tanzilTool.getChapter(chapterNumber, QURAN_SIMPLE_ENHANCED);
+        Chapter chapter = document.getChapters().get(0);
         assertEquals(chapter.getChapterNumber(), chapterNumber);
         log(format("Chapter Number: %s, Number of Verses: %s", chapterNumber, chapter.getVerses().size()), true);
     }
@@ -46,7 +49,8 @@ public class TanzilTest {
     public void testRetrieveVerse() {
         Integer chapterNumber = 3;
         Integer verseNumber = 119;
-        final Chapter chapter = tanzilTool.getVerse(chapterNumber, verseNumber, QURAN_SIMPLE_ENHANCED);
+        final Document document = tanzilTool.getVerse(chapterNumber, verseNumber, QURAN_SIMPLE_ENHANCED);
+        final Chapter chapter = document.getChapters().get(0);
         Verse verse = chapter.getVerses().get(0);
         log(format("Chapter Number: %s, Verse Number: %s", verse.getChapterNumber(), verse.getVerseNumber()), true);
         String text = verse.getText();
@@ -67,7 +71,8 @@ public class TanzilTest {
         Integer fromVerse = 50;
         Integer toVerse = 97;
         int size = toVerse - fromVerse + 1;
-        final Chapter chapter = tanzilTool.getVerseRange(chapterNumber, fromVerse, toVerse, QURAN_SIMPLE_ENHANCED);
+        final Document document = tanzilTool.getVerseRange(chapterNumber, fromVerse, toVerse, QURAN_SIMPLE_ENHANCED);
+        final Chapter chapter = document.getChapters().get(0);
         final List<Verse> verses = chapter.getVerses();
         for (Verse verse : verses) {
             System.out.println(verse.getChapterNumber() + ":" + verse.getVerseNumber());
@@ -80,7 +85,8 @@ public class TanzilTest {
         int start = 1;
         int end = 114;
         for (int chapterNumber = start; chapterNumber <= end; chapterNumber++) {
-            Chapter chapter = tanzilTool.getChapter(chapterNumber, QURAN_SIMPLE_ENHANCED);
+            final Document document = tanzilTool.getChapter(chapterNumber, QURAN_SIMPLE_ENHANCED);
+            Chapter chapter = document.getChapters().get(0);
             log(format("Chapter Number: %s", chapterNumber), true);
             List<Verse> verses = chapter.getVerses();
             verses.forEach(verse -> {
@@ -104,14 +110,16 @@ public class TanzilTest {
 
     @Test(dependsOnMethods = {"testQuranicPunctuations"})
     public void testGetTranslation() {
-        Chapter chapter = translationTool.getVerse(18, 10, SAHIH);
+        final Document document = translationTool.getVerse(18, 10, SAHIH);
+        Chapter chapter = document.getChapters().get(0);
         final Verse verse = chapter.getVerses().get(0);
         log(format("%s: %s", chapter.getChapterNumber(), verse.getText()), true);
     }
 
     @Test(dependsOnMethods = {"testGetTranslation"})
     public void search() {
-        final List<Chapter> chapters = tanzilTool.search(SEARCH_STRING, QURAN_SIMPLE_CLEAN);
+        final Document document = tanzilTool.search(SEARCH_STRING, QURAN_SIMPLE_CLEAN);
+        final List<Chapter> chapters = document.getChapters();
         assertEquals(chapters.isEmpty(), false);
         int totalNumOfVerses = 0;
         for (Chapter chapter : chapters) {
@@ -126,7 +134,8 @@ public class TanzilTest {
 
     @Test(dependsOnMethods = {"search"})
     public void searchUthmaniRemoveDiacritic() {
-        final List<Chapter> chapters = tanzilTool.search(SEARCH_STRING, REMOVE_DIACRITIC, QURAN_UTHMANI);
+        final Document document = tanzilTool.search(SEARCH_STRING, REMOVE_DIACRITIC, QURAN_UTHMANI);
+        final List<Chapter> chapters = document.getChapters();
         int totalNumOfVerses = 0;
         for (Chapter chapter : chapters) {
             totalNumOfVerses += chapter.getVerses().size();
@@ -140,7 +149,8 @@ public class TanzilTest {
 
     @Test(dependsOnMethods = {"searchUthmaniRemoveDiacritic"})
     public void searchUthmani() {
-        final List<Chapter> chapters = tanzilTool.search(SEARCH_STRING, NONE, QURAN_UTHMANI);
+        final Document document = tanzilTool.search(SEARCH_STRING, NONE, QURAN_UTHMANI);
+        final List<Chapter> chapters = document.getChapters();
         assertEquals(chapters.isEmpty(), true);
     }
 

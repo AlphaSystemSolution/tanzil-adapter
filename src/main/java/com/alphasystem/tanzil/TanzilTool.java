@@ -1,8 +1,6 @@
 package com.alphasystem.tanzil;
 
-import com.alphasystem.tanzil.model.Chapter;
-
-import java.util.List;
+import com.alphasystem.tanzil.model.Document;
 
 import static com.alphasystem.tanzil.SearchOption.NONE;
 
@@ -27,7 +25,7 @@ public final class TanzilTool {
         return instance;
     }
 
-    public List<Chapter> getChapters() {
+    public Document getChapters() {
         return xQueryTool.getChapters();
     }
 
@@ -36,7 +34,7 @@ public final class TanzilTool {
      * @param script
      * @return
      */
-    public Chapter getChapter(int chapterNumber, QuranScript script) {
+    public Document getChapter(int chapterNumber, QuranScript script) {
         return xQueryTool.executeGetChapterByChapterNumberQuery(chapterNumber, script);
     }
 
@@ -45,19 +43,19 @@ public final class TanzilTool {
      * @param verseNumber
      * @return
      */
-    public Chapter getVerse(int chapterNumber, int verseNumber, QuranScript script) {
+    public Document getVerse(int chapterNumber, int verseNumber, QuranScript script) {
         return xQueryTool.executeGetSingleVerseQuery(chapterNumber, verseNumber, script);
     }
 
-    public Chapter getVerseRange(int chapterNumber, int fromVerse, int toVerse, QuranScript script) {
+    public Document getVerseRange(int chapterNumber, int fromVerse, int toVerse, QuranScript script) {
         return xQueryTool.executeGetVerseRangeQuery(chapterNumber, fromVerse, toVerse, script);
     }
 
-    public List<Chapter> search(String searchString, QuranScript script) {
+    public Document search(String searchString, QuranScript script) {
         return search(searchString, NONE, script);
     }
 
-    public List<Chapter> search(String searchString, SearchOption searchOption, QuranScript script) {
+    public Document search(String searchString, SearchOption searchOption, QuranScript script) {
         return xQueryTool.executeSearch(searchString, searchOption, script);
     }
 
