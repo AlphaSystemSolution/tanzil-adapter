@@ -10,7 +10,7 @@ import static java.lang.String.format;
  */
 public enum TranslationScript implements ScriptSupport {
 
-    SAHIH(ENGLISH, "sahih", "Shaih International");
+   NONE(ENGLISH, null, "None"), SAHIH(ENGLISH, "sahih", "Shaih International");
 
     private final Language language;
     private final String script;
