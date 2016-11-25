@@ -9,7 +9,8 @@ for $chapter in $doc/quran/sura
 let $chapterNumber := $chapter/@index
 return <sura index="{$chapterNumber}" name="{$chapter/@name}">
 {
-for $verse in $doc/quran/sura[@index=$chapterNumber]/aya[contains(@text, $searchString)]
+for $verse in $doc/quran/sura[@index=$chapterNumber]/aya
+where $verse[contains(@text, $searchString)]
 return $verse
 }
 </sura>

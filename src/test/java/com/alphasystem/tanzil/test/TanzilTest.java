@@ -67,17 +67,16 @@ public class TanzilTest {
 
     @Test(dependsOnMethods = {"testRetrieveVerse"})
     public void testRetrieveVerseRange() {
-        Integer chapterNumber = 18;
-        Integer fromVerse = 50;
-        Integer toVerse = 97;
+        int chapterNumber = 18;
+        int fromVerse = 50;
+        int toVerse = 97;
         int size = toVerse - fromVerse + 1;
         final Document document = tanzilTool.getVerseRange(chapterNumber, fromVerse, toVerse, QURAN_SIMPLE_ENHANCED);
         final Chapter chapter = document.getChapters().get(0);
         final List<Verse> verses = chapter.getVerses();
-        for (Verse verse : verses) {
-            System.out.println(verse.getChapterNumber() + ":" + verse.getVerseNumber());
-        }
         assertEquals(verses.size(), size);
+        assertEquals(verses.get(0).getVerseNumber(), fromVerse);
+        assertEquals(verses.get(verses.size() - 1).getVerseNumber(), toVerse);
     }
 
     @Test(dependsOnMethods = {"testRetrieveVerseRange"})

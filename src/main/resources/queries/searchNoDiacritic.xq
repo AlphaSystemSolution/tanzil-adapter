@@ -10,10 +10,12 @@ declare variable $searchString external;
     let $chapterNumber := $chapter/@index
     return <sura index="{$chapterNumber}" name="{$chapter/@name}">
         {
-            for $verseClean in $docClean/quran/sura[@index=$chapterNumber]/aya[contains(@text, $searchString)]
+            for $verseClean in $docClean/quran/sura[@index=$chapterNumber]/aya
+            where $verseClean[contains(@text, $searchString)]
             let $verseNumber := $verseClean/@index
             return
-                for $verse in $doc/quran/sura[@index=$chapterNumber]/aya[@index=$verseNumber]
+                for $verse in $doc/quran/sura[@index=$chapterNumber]/aya
+                where $verse[@index=$verseNumber]
                 return $verse
         }
     </sura>
