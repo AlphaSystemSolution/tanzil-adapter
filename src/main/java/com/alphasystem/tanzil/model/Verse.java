@@ -60,7 +60,7 @@ public class Verse {
     protected String text;
     @XmlAttribute(name = "bismillah")
     protected String bismillah;
-    @XmlTransient
+    @XmlAttribute
     protected String translation;
 
     /**

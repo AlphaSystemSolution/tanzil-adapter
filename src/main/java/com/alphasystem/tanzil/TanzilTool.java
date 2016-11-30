@@ -11,6 +11,7 @@ public final class TanzilTool {
 
     private static TanzilTool instance;
     private XQueryTool xQueryTool = XQueryTool.getInstance();
+    private TranslationTool translationTool = TranslationTool.getInstance();
 
     /*
      * Do not let any one instantiate this class
@@ -49,6 +50,11 @@ public final class TanzilTool {
 
     public Document getVerseRange(int chapterNumber, int fromVerse, int toVerse, QuranScript script) {
         return xQueryTool.executeGetVerseRangeQuery(chapterNumber, fromVerse, toVerse, script);
+    }
+
+    public Document getVerseRange(int chapterNumber, int fromVerse, int toVerse, QuranScript script,
+                                  TranslationScript translationScript) {
+        return xQueryTool.executeGetVerseRangeQuery(chapterNumber, fromVerse, toVerse, script, translationScript);
     }
 
     public Document search(String searchString, QuranScript script) {

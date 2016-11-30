@@ -18,6 +18,7 @@ import static com.alphasystem.tanzil.SearchOption.REMOVE_DIACRITIC;
 import static com.alphasystem.tanzil.TranslationScript.SAHIH;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Reporter.log;
 
 /**
@@ -79,7 +80,25 @@ public class TanzilTest {
         assertEquals(verses.get(verses.size() - 1).getVerseNumber(), toVerse);
     }
 
-    @Test(dependsOnMethods = {"testRetrieveVerseRange"})
+    @Test(dependsOnMethods = {"testRetrieveVerse"})
+    public void testRetrieveVerseRangeWithTranslation() {
+        int chapterNumber = 18;
+        int fromVerse = 50;
+        int toVerse = 97;
+        int size = toVerse - fromVerse + 1;
+        final Document document = tanzilTool.getVerseRange(chapterNumber, fromVerse, toVerse, QURAN_SIMPLE_ENHANCED, SAHIH);
+        final Chapter chapter = document.getChapters().get(0);
+        final List<Verse> verses = chapter.getVerses();
+        assertEquals(verses.size(), size);
+        assertEquals(verses.get(0).getVerseNumber(), fromVerse);
+        assertEquals(verses.get(verses.size() - 1).getVerseNumber(), toVerse);
+        verses.forEach(verse -> {
+            assertNotNull(verse.getTranslation(), "\"Translation is null:\"");
+            System.out.println(verse.getTranslation());
+        });
+    }
+
+    @Test(dependsOnMethods = {"testRetrieveVerseRangeWithTranslation"})
     public void testQuranicPunctuations() {
         int start = 1;
         int end = 114;

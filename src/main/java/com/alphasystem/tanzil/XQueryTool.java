@@ -30,9 +30,11 @@ class XQueryTool {
     private static final String GET_CHAPTERS_QUERY = "getChapters";
     private static final String GET_CHAPTER_BY_CHAPTER_NUMBER_QUERY = "getChapterByChapterNumber";
     private static final String GET_VERSE_RANGE_QUERY = "getVerseRange";
+    private static final String GET_VERSE_RANGE_WITH_TRANSLATION_QUERY = "getVerseRangeWithTranslation";
     private static final String GET_SINGLE_VERSE_QUERY = "getSingleVerse";
     private static final String SEARCH_QUERY = "search";
     private static final String SEARCH_NO_DIACRITIC_QUERY = "searchNoDiacritic";
+    private static final String TRANSLATION_DOC_VARIABLE_NAME = "tdoc";
     private static final String DOC_VARIABLE_NAME = "doc";
     private static final String DOC_CLEAN_VARIABLE_NAME = "docClean";
     private static final String CHAPTER_NUMBER_VARIABLE_NAME = "chapterNumber";
@@ -48,6 +50,7 @@ class XQueryTool {
     private final XQueryEvaluator getChapters;
     private final XQueryEvaluator getChapterByChapterNumber;
     private final XQueryEvaluator getVerseRange;
+    private final XQueryEvaluator getVerseRangeWithTranslation;
     private final XQueryEvaluator getSingleVerse;
     private final XQueryEvaluator search;
     private final XQueryEvaluator searchNoDiacritic;
@@ -61,6 +64,7 @@ class XQueryTool {
         getChapters = getCompiledQuery(xQueryCompiler, GET_CHAPTERS_QUERY);
         getChapterByChapterNumber = getCompiledQuery(xQueryCompiler, GET_CHAPTER_BY_CHAPTER_NUMBER_QUERY);
         getVerseRange = getCompiledQuery(xQueryCompiler, GET_VERSE_RANGE_QUERY);
+        getVerseRangeWithTranslation = getCompiledQuery(xQueryCompiler, GET_VERSE_RANGE_WITH_TRANSLATION_QUERY);
         getSingleVerse = getCompiledQuery(xQueryCompiler, GET_SINGLE_VERSE_QUERY);
         search = getCompiledQuery(xQueryCompiler, SEARCH_QUERY);
         searchNoDiacritic = getCompiledQuery(xQueryCompiler, SEARCH_NO_DIACRITIC_QUERY);
@@ -137,6 +141,32 @@ class XQueryTool {
         } catch (JAXBException e) {
             throw new RuntimeException(format("Error converting document for chapterNumber {%s} and script {%s}",
                     chapterNumber, script), e);
+        }
+    }
+
+    <S extends Enum<S> & ScriptSupport> Document executeGetVerseRangeQuery(int chapterNumber, int fromVerse,
+                                                                           int toVerse, S script,
+                                                                           TranslationScript translationScript)
+            throws RuntimeException {
+        final boolean doTranslate = (translationScript != null) && !TranslationScript.NONE.equals(translationScript);
+        getVerseRangeWithTranslation.setExternalVariable(new QName(DOC_VARIABLE_NAME), getDocument(script));
+        getVerseRangeWithTranslation.setExternalVariable(new QName(CHAPTER_NUMBER_VARIABLE_NAME), new XdmAtomicValue(chapterNumber));
+        getVerseRangeWithTranslation.setExternalVariable(new QName(FROM_VERSE_VARIABLE_NAME), new XdmAtomicValue(fromVerse));
+        getVerseRangeWithTranslation.setExternalVariable(new QName(TO_VERSE_VARIABLE_NAME), new XdmAtomicValue(toVerse));
+        if (doTranslate) {
+            getVerseRangeWithTranslation.setExternalVariable(new QName(TRANSLATION_DOC_VARIABLE_NAME), getDocument(translationScript));
+            try {
+                final XdmValue result = getVerseRangeWithTranslation.evaluate();
+                return jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
+            } catch (SaxonApiException e) {
+                throw new RuntimeException(format("Error running query {getVerseRange} for chapterNumber {%s}, fromVerse {%s}, toVerse {%s} and script {%s}",
+                        chapterNumber, fromVerse, toVerse, script), e);
+            } catch (JAXBException e) {
+                throw new RuntimeException(format("Error converting document for chapterNumber {%s} and script {%s}",
+                        chapterNumber, script), e);
+            }
+        } else {
+            return executeGetVerseRangeQuery(chapterNumber, fromVerse, toVerse, script);
         }
     }
 
