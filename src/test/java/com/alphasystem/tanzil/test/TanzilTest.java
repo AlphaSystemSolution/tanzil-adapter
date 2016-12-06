@@ -151,6 +151,22 @@ public class TanzilTest {
     }
 
     @Test(dependsOnMethods = {"search"})
+    public void searchWithTranslation() {
+        final Document document = tanzilTool.search(SEARCH_STRING, QURAN_SIMPLE_CLEAN, SAHIH);
+        final List<Chapter> chapters = document.getChapters();
+        assertEquals(chapters.isEmpty(), false);
+        int totalNumOfVerses = 0;
+        for (Chapter chapter : chapters) {
+            totalNumOfVerses += chapter.getVerses().size();
+        }
+        log("" + totalNumOfVerses + " : " + chapters.size(), true);
+        chapters.forEach(chapter -> {
+            final List<Verse> verses = chapter.getVerses();
+            verses.forEach(verse -> assertNotNull(verse.getTranslation()));
+        });
+    }
+
+    @Test(dependsOnMethods = {"searchWithTranslation"})
     public void searchUthmaniRemoveDiacritic() {
         final Document document = tanzilTool.search(SEARCH_STRING, REMOVE_DIACRITIC, QURAN_UTHMANI);
         final List<Chapter> chapters = document.getChapters();
@@ -165,7 +181,22 @@ public class TanzilTest {
         });
     }
 
-    @Test(dependsOnMethods = {"searchUthmaniRemoveDiacritic"})
+    @Test(dependsOnMethods = {"searchWithTranslation"})
+    public void searchUthmaniRemoveDiacriticWithTranslation() {
+        final Document document = tanzilTool.search(SEARCH_STRING, REMOVE_DIACRITIC, QURAN_UTHMANI, SAHIH);
+        final List<Chapter> chapters = document.getChapters();
+        int totalNumOfVerses = 0;
+        for (Chapter chapter : chapters) {
+            totalNumOfVerses += chapter.getVerses().size();
+        }
+        log("" + totalNumOfVerses + " : " + chapters.size(), true);
+        chapters.forEach(chapter -> {
+            final List<Verse> verses = chapter.getVerses();
+            verses.forEach(verse -> assertNotNull(verse.getTranslation()));
+        });
+    }
+
+    @Test(dependsOnMethods = {"searchUthmaniRemoveDiacriticWithTranslation"})
     public void searchUthmani() {
         final Document document = tanzilTool.search(SEARCH_STRING, NONE, QURAN_UTHMANI);
         final List<Chapter> chapters = document.getChapters();

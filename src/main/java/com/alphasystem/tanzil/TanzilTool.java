@@ -61,8 +61,16 @@ public final class TanzilTool {
         return search(searchString, NONE, script);
     }
 
+    public Document search(String searchString, QuranScript script, TranslationScript translationScript) {
+        return search(searchString, NONE, script, translationScript);
+    }
+
     public Document search(String searchString, SearchOption searchOption, QuranScript script) {
         return xQueryTool.executeSearch(searchString, searchOption, script);
+    }
+
+    public Document search(String searchString, SearchOption searchOption, QuranScript script, TranslationScript translationScript) {
+        return xQueryTool.executeSearch(searchString, searchOption, script, translationScript);
     }
 
 }

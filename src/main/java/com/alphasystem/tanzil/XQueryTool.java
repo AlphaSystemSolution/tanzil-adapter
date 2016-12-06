@@ -33,7 +33,9 @@ class XQueryTool {
     private static final String GET_VERSE_RANGE_WITH_TRANSLATION_QUERY = "getVerseRangeWithTranslation";
     private static final String GET_SINGLE_VERSE_QUERY = "getSingleVerse";
     private static final String SEARCH_QUERY = "search";
+    private static final String SEARCH_WITH_TRANSLATION_QUERY = "searchWithTranslation";
     private static final String SEARCH_NO_DIACRITIC_QUERY = "searchNoDiacritic";
+    private static final String SEARCH_NO_DIACRITIC_WITH_TRANSLATION_QUERY = "searchNoDiacriticWithTranslation";
     private static final String TRANSLATION_DOC_VARIABLE_NAME = "tdoc";
     private static final String DOC_VARIABLE_NAME = "doc";
     private static final String DOC_CLEAN_VARIABLE_NAME = "docClean";
@@ -54,6 +56,8 @@ class XQueryTool {
     private final XQueryEvaluator getSingleVerse;
     private final XQueryEvaluator search;
     private final XQueryEvaluator searchNoDiacritic;
+    private final XQueryEvaluator searchWithTranslation;
+    private final XQueryEvaluator searchNoDiacriticWithTranslation;
 
     private XQueryTool() throws RuntimeException {
         Processor processor = new Processor(false);
@@ -68,6 +72,8 @@ class XQueryTool {
         getSingleVerse = getCompiledQuery(xQueryCompiler, GET_SINGLE_VERSE_QUERY);
         search = getCompiledQuery(xQueryCompiler, SEARCH_QUERY);
         searchNoDiacritic = getCompiledQuery(xQueryCompiler, SEARCH_NO_DIACRITIC_QUERY);
+        searchWithTranslation = getCompiledQuery(xQueryCompiler, SEARCH_WITH_TRANSLATION_QUERY);
+        searchNoDiacriticWithTranslation = getCompiledQuery(xQueryCompiler, SEARCH_NO_DIACRITIC_WITH_TRANSLATION_QUERY);
 
         getDocument(QURAN_SIMPLE_CLEAN);
     }
@@ -215,6 +221,41 @@ class XQueryTool {
         }
     }
 
+    private <S extends Enum<S> & ScriptSupport> Document executeSearch(String searchString, S script,
+                                                                       TranslationScript translationScript)
+            throws RuntimeException {
+        final boolean doTranslate = (translationScript != null) && !TranslationScript.NONE.equals(translationScript);
+        if (doTranslate) {
+            searchWithTranslation.setExternalVariable(new QName(DOC_VARIABLE_NAME), getDocument(script));
+            searchWithTranslation.setExternalVariable(new QName(TRANSLATION_DOC_VARIABLE_NAME), getDocument(translationScript));
+            searchWithTranslation.setExternalVariable(new QName(SEARCH_STRING_VARIABLE_NAME), new XdmAtomicValue(searchString));
+            try {
+                final XdmValue result = searchWithTranslation.evaluate();
+                final Document document = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
+                final List<Chapter> chapters = document.getChapters();
+                if (chapters == null || chapters.isEmpty()) {
+                    return document;
+                }
+                final Iterator<Chapter> iterator = chapters.iterator();
+                while (iterator.hasNext()) {
+                    final Chapter chapter = iterator.next();
+                    if (chapter.getVerses().isEmpty()) {
+                        iterator.remove();
+                    }
+                }
+                return document;
+            } catch (SaxonApiException e) {
+                throw new RuntimeException(format("Error running query {search} for searchString {%s} and script {%s}",
+                        searchString, script), e);
+            } catch (JAXBException e) {
+                throw new RuntimeException(format("Error converting document for searchString {%s} and script {%s}",
+                        searchString, script), e);
+            }
+        } else {
+            return executeSearch(searchString, script);
+        }
+    }
+
     <S extends Enum<S> & ScriptSupport> Document executeSearch(String searchString, SearchOption searchOption,
                                                                S script) throws RuntimeException {
         searchOption = (searchOption == null) ? NONE : searchOption;
@@ -247,7 +288,47 @@ class XQueryTool {
             throw new RuntimeException(format("Error converting document for searchString {%s} and script {%s}",
                     searchString, script), e);
         }
+    }
 
+    <S extends Enum<S> & ScriptSupport> Document executeSearch(String searchString, SearchOption searchOption,
+                                                               S script, TranslationScript translationScript)
+            throws RuntimeException {
+        searchOption = (searchOption == null) ? NONE : searchOption;
+        if (searchOption.equals(NONE) || QURAN_SIMPLE_CLEAN.equals(script)) {
+            // SearchOption "NONE" means search given string in given script
+            return executeSearch(searchString, script, translationScript);
+        }
+        // if SearchOption is "REMOVE_DIACRITIC" then gets the search result first
+
+        final boolean doTranslate = (translationScript != null) && !TranslationScript.NONE.equals(translationScript);
+        if (doTranslate) {
+            searchNoDiacriticWithTranslation.setExternalVariable(new QName(DOC_CLEAN_VARIABLE_NAME), getDocument(QURAN_SIMPLE_CLEAN));
+            searchNoDiacriticWithTranslation.setExternalVariable(new QName(DOC_VARIABLE_NAME), getDocument(script));
+            searchNoDiacriticWithTranslation.setExternalVariable(new QName(TRANSLATION_DOC_VARIABLE_NAME), getDocument(translationScript));
+            searchNoDiacriticWithTranslation.setExternalVariable(new QName(SEARCH_STRING_VARIABLE_NAME), new XdmAtomicValue(searchString));
+
+            try {
+                final XdmValue result = searchNoDiacriticWithTranslation.evaluate();
+                final Document document = jaxbTool.unmarshal(Document.class, new ByteArrayInputStream(result.toString().getBytes()));
+                final List<Chapter> chapters = document.getChapters();
+                final Iterator<Chapter> iterator = chapters.iterator();
+                while (iterator.hasNext()) {
+                    final Chapter chapter = iterator.next();
+                    if (chapter.getVerses().isEmpty()) {
+                        iterator.remove();
+                    }
+                }
+                return document;
+            } catch (SaxonApiException e) {
+                throw new RuntimeException(format("Error running query {searchNoDiacritic} for searchString {%s} and script {%s}",
+                        searchString, script), e);
+            } catch (JAXBException e) {
+                throw new RuntimeException(format("Error converting document for searchString {%s} and script {%s}",
+                        searchString, script), e);
+            }
+        } else {
+            return executeSearch(searchString, searchOption, script);
+        }
     }
 
     private <S extends Enum<S> & ScriptSupport> XdmNode getDocument(S script) throws RuntimeException {
